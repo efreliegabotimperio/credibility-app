@@ -23,7 +23,7 @@ export default function AuthModal({ onClose }) {
 
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email === 'super_admin' ? 'superadmin@example.com' : email,
       password,
     });
     setLoading(false);
@@ -50,7 +50,7 @@ export default function AuthModal({ onClose }) {
 
     setLoading(true);
     const { error } = await supabase.auth.signUp({
-      email,
+      email: email === 'super_admin' ? 'superadmin@example.com' : email,
       password,
       options: {
         data: {
@@ -126,10 +126,10 @@ export default function AuthModal({ onClose }) {
             </>
           )}
           <div className="form-group">
-            <label className="form-label" htmlFor="auth-email">Email</label>
+            <label className="form-label" htmlFor="auth-email">Email or Username</label>
             <input
               id="auth-email"
-              type="email"
+              type="text"
               className="form-input"
               placeholder="you@example.com"
               value={email}

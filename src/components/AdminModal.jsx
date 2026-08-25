@@ -74,7 +74,7 @@ export default function AdminModal({ onClose }) {
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
               />
-              <small style={{ display: 'block', marginTop: '4px', color: '#6b7280', fontSize: '0.8rem' }}>
+              <small style={{ display: 'block', marginTop: '4px', color: 'var(--taupe)', fontSize: '0.8rem' }}>
                 This key will be securely used by Edge Functions for all users.
               </small>
             </div>

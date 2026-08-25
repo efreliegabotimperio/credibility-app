@@ -40,6 +40,8 @@ export default function App() {
 
   // UI state
   const [toast, setToast] = useState(null);
+  const [selectedPrompt, setSelectedPrompt] = useState('');
+  const [isSavingSop, setIsSavingSop] = useState(false);
 
   // Listen to Supabase Auth State
   useEffect(() => {
@@ -70,6 +72,7 @@ export default function App() {
     if (data) {
       setUserRole(data.role);
     } else {
+      if (error) console.error("Error fetching role:", error);
       setUserRole('owner');
     }
   }
@@ -105,12 +108,14 @@ export default function App() {
   }
 
   async function handleSave() {
-    if (!pendingSop) return;
+    if (!pendingSop || isSavingSop) return;
     
     if (!currentUser) {
       setShowAuth(true);
       return;
     }
+
+    setIsSavingSop(true);
 
     const { data, error } = await supabase
       .from('sops')
@@ -120,6 +125,8 @@ export default function App() {
           owner_role: pendingSop.sop.owner_role,
           steps: pendingSop.sop.steps,
           why_not_you: pendingSop.sop.why_not_you,
+          type: pendingSop.sop.type,
+          edited_text: pendingSop.sop.edited_text,
           user_id: currentUser.id
         }
       ])
@@ -144,10 +151,25 @@ export default function App() {
         document.getElementById('sop-library')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 200);
     }
+    
+    setIsSavingSop(false);
   }
 
   function handleDiscard() {
     setPendingSop(null);
+  }
+
+  async function handleDeleteSop(id) {
+    if (!window.confirm("Are you sure you want to delete this?")) return;
+    
+    const { error } = await supabase.from('sops').delete().eq('id', id);
+    if (error) {
+      console.error("Error deleting SOP:", error);
+      setToast("Error deleting item.");
+    } else {
+      setSops(prev => prev.filter(sop => sop.id !== id));
+      setToast("Item deleted.");
+    }
   }
 
   async function handleLogout() {
@@ -238,15 +260,21 @@ export default function App() {
         {/* Prompt suggestion cards */}
         <div className="prompt-cards">
           {[
-            'Document how I onboard a new client.',
-            'Write the steps for our weekly content review.',
-            'Turn my daily opening routine into an SOP.',
-            'Help me document my invoicing process.',
+            'Rewrite this email so it sounds more confident and direct.',
+            'Remove weak language from this message.',
+            'Make this proposal easier to approve.',
+            'Help me say this firmly without sounding harsh.',
           ].map((prompt, i) => (
             <button
               key={i}
-              className="prompt-card"
-              onClick={() => document.getElementById('capture-textarea')?.focus()}
+              className={`prompt-card${selectedPrompt === prompt ? ' prompt-card--active' : ''}`}
+              onClick={() => {
+                setSelectedPrompt(prompt);
+                setTimeout(() => {
+                  const ta = document.getElementById('capture-textarea');
+                  if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+                }, 50);
+              }}
             >
               {prompt}
             </button>
@@ -256,6 +284,8 @@ export default function App() {
         {/* Capture */}
         <CaptureForm
           onResult={handleResult}
+          selectedPrompt={selectedPrompt}
+          onPromptUsed={() => setSelectedPrompt('')}
         />
 
         {/* Result */}
@@ -264,6 +294,7 @@ export default function App() {
             sop={pendingSop.sop}
             onSave={handleSave}
             onDiscard={handleDiscard}
+            isSaving={isSavingSop}
           />
         )}
 
@@ -273,6 +304,7 @@ export default function App() {
         <Library
           sops={sops}
           isLoggedIn={!!currentUser}
+          onDelete={handleDeleteSop}
         />
       </main>
 

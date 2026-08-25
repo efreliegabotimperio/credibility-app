@@ -1,20 +1,35 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// @ts-nocheck
+// @ts-ignore: Deno import handled by supabase/functions/deno.json
+import { serve } from 'http/server.ts';
+import { createClient } from '@supabase/supabase-js';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SYSTEM_PROMPT = `You convert a business owner's messy spoken description of a task into a clean, clear SOP a delegate could follow. Keep steps simple and concrete. Choose the most fitting generic role for who should own this task — never name a specific company or brand. Return only the JSON object, nothing else.
+const SYSTEM_PROMPT = `You are a professional writing editor and business process expert.
 
-Return ONLY valid JSON in this exact shape:
+Analyse the user's message. If it asks you to REWRITE, EDIT, IMPROVE, or REFINE some text (e.g. an email, proposal, message, or any piece of writing), treat it as a WRITING EDIT task.
+If it asks you to DOCUMENT, LIST STEPS for, or CREATE AN SOP for a business process, treat it as an SOP task.
+
+For a WRITING EDIT task, return ONLY valid JSON in this exact shape:
 {
+  "type": "edit",
+  "title": "short descriptive title for what was edited",
+  "edited_text": "the fully rewritten text, preserving the original structure (subject line, greeting, body, sign-off if it was an email)"
+}
+
+For an SOP task, return ONLY valid JSON in this exact shape:
+{
+  "type": "sop",
   "title": "short SOP title",
   "steps": ["step 1", "step 2", "step 3"],
   "owner_role": "one of: General VA, Tech VA, Bookkeeper, Social Media VA, Customer Service VA, Executive Assistant, or Specialist",
   "why_not_you": "one warm sentence on why the owner shouldn't be the one doing this"
-}`;
+}
+
+Return ONLY the JSON object, nothing else.`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {

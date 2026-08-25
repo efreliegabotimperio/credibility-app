@@ -52,10 +52,17 @@ function useVoice(onTranscript) {
   return { recording, supported, startRecording, stopRecording };
 }
 
-export default function CaptureForm({ onResult }) {
+export default function CaptureForm({ onResult, selectedPrompt, onPromptUsed }) {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // When a prompt card is clicked, pre-fill the textarea
+  useEffect(() => {
+    if (selectedPrompt) {
+      setText(selectedPrompt);
+    }
+  }, [selectedPrompt]);
 
   const { recording, supported, startRecording, stopRecording } = useVoice((transcript) => {
     setText(prev => (prev ? prev + ' ' + transcript : transcript));
@@ -71,6 +78,7 @@ export default function CaptureForm({ onResult }) {
       const sop = await generateSOP(text.trim());
       onResult(sop, text.trim());
       setText('');
+      onPromptUsed?.();
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {

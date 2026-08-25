@@ -115,7 +115,7 @@ export default function ActivityLogs({ onClose }) {
           <div style={{ overflowX: 'auto', marginTop: '16px' }}>
             <table className="responsive-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
               <thead>
-                <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
+                <tr style={{ borderBottom: '2px solid var(--linen-mid)', textAlign: 'left' }}>
                   <th style={{ padding: '12px 8px' }}>Date & Time</th>
                   <th style={{ padding: '12px 8px' }}>User</th>
                   <th style={{ padding: '12px 8px' }}>Action</th>
@@ -124,8 +124,8 @@ export default function ActivityLogs({ onClose }) {
               </thead>
               <tbody>
                 {currentLogs.map(log => (
-                  <tr key={log.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td data-label="Date & Time" style={{ padding: '12px 8px', color: '#6b7280', whiteSpace: 'nowrap' }}>
+                  <tr key={log.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td data-label="Date & Time" style={{ padding: '12px 8px', color: 'var(--taupe)', whiteSpace: 'nowrap' }}>
                       {formatDate(log.created_at)}
                     </td>
                     <td data-label="User" style={{ padding: '12px 8px', fontWeight: '500' }}>
@@ -134,23 +134,25 @@ export default function ActivityLogs({ onClose }) {
                     <td data-label="Action" style={{ padding: '12px 8px' }}>
                       <span style={{ 
                         display: 'inline-block', 
-                        padding: '2px 8px', 
+                        padding: '4px 10px', 
                         borderRadius: '12px', 
-                        background: '#f3f4f6', 
+                        background: 'var(--bg-surface)', 
+                        color: 'var(--taupe)',
+                        border: '1px solid var(--border)',
                         fontSize: '0.8rem',
                         fontWeight: '500'
                       }}>
                         {log.action}
                       </span>
                     </td>
-                    <td data-label="Details" style={{ padding: '12px 8px', color: '#4b5563' }}>
+                    <td data-label="Details" style={{ padding: '12px 8px', color: 'var(--taupe)' }}>
                       {log.details || '-'}
                     </td>
                   </tr>
                 ))}
                 {currentLogs.length === 0 && (
                   <tr>
-                    <td colSpan="4" style={{ textAlign: 'center', padding: '24px', color: '#6b7280' }}>
+                    <td colSpan="4" style={{ textAlign: 'center', padding: '24px', color: 'var(--taupe)' }}>
                       No activity logs found.
                     </td>
                   </tr>
@@ -168,7 +170,7 @@ export default function ActivityLogs({ onClose }) {
                 >
                   Previous
                 </button>
-                <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--taupe)' }}>
                   Page {currentPage} of {totalPages}
                 </span>
                 <button 

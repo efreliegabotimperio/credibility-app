@@ -6,7 +6,15 @@ export async function generateSOP(userText) {
   });
 
   if (error) {
-    throw new Error(error.message || 'Error generating SOP');
+    let errorMessage = error.message;
+    try {
+      if (error.context) {
+        const errData = await error.context.json();
+        if (errData.error) errorMessage = errData.error;
+      }
+    } catch(e) {}
+    console.error("Edge Function Error Details:", error);
+    throw new Error(errorMessage || 'Error generating SOP');
   }
 
   return data;

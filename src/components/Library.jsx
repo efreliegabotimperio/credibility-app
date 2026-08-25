@@ -1,6 +1,6 @@
 import SopCard from './SopCard';
 
-export default function Library({ sops, onDownload, isLoggedIn }) {
+export default function Library({ sops, onDownload, isLoggedIn, onDelete }) {
   const count = sops.length;
 
   function handleDownloadJSON() {
@@ -15,8 +15,12 @@ export default function Library({ sops, onDownload, isLoggedIn }) {
 
   function handleDownloadText() {
     const lines = sops.map((sop, i) => {
-      const steps = sop.steps.map((s, j) => `  ${j + 1}. ${s}`).join('\n');
-      return `─────────────────────────────────────\n${i + 1}. ${sop.title}\nOwner: ${sop.owner_role}\n\nSteps:\n${steps}\n\nWhy not you:\n  ${sop.why_not_you}`;
+      if (sop.type === 'edit') {
+        return `─────────────────────────────────────\n${i + 1}. ${sop.title}\nType: Edit\n\nEdited Text:\n${sop.edited_text}`;
+      } else {
+        const steps = (sop.steps || []).map((s, j) => `  ${j + 1}. ${s}`).join('\n');
+        return `─────────────────────────────────────\n${i + 1}. ${sop.title}\nOwner: ${sop.owner_role || 'N/A'}\n\nSteps:\n${steps}\n\nWhy not you:\n  ${sop.why_not_you || 'N/A'}`;
+      }
     });
     const content = `SOP LIBRARY\nExported ${new Date().toLocaleDateString()}\n\n${lines.join('\n\n')}`;
     const blob = new Blob([content], { type: 'text/plain' });
@@ -73,7 +77,7 @@ export default function Library({ sops, onDownload, isLoggedIn }) {
 
           <div className="sop-list">
             {sops.map((sop, i) => (
-              <SopCard key={sop.id} sop={sop} index={i} />
+              <SopCard key={sop.id} sop={sop} index={i} onDelete={() => onDelete(sop.id)} />
             ))}
           </div>
         </>

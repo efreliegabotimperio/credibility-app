@@ -31,7 +31,7 @@ export function RoleBadge({ role, size = 'normal' }) {
   );
 }
 
-export default function SopCard({ sop, index }) {
+export default function SopCard({ sop, index, onDelete }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -44,7 +44,8 @@ export default function SopCard({ sop, index }) {
         id={`sop-card-${index}`}
       >
         <div className="sop-card-left">
-          <RoleBadge role={sop.owner_role} size="small" />
+          {sop.type !== 'edit' && <RoleBadge role={sop.owner_role} size="small" />}
+          {sop.type === 'edit' && <span className="owner-badge" style={{ fontSize: '11px', padding: '4px 10px', background: 'var(--bg-surface)', color: 'var(--taupe)', border: '1px solid var(--border)' }}>✏️ Edit</span>}
           <span className="sop-card-title">{sop.title}</span>
         </div>
         <span className={`sop-card-chevron${open ? ' open' : ''}`}>
@@ -54,16 +55,35 @@ export default function SopCard({ sop, index }) {
 
       {open && (
         <div className="sop-card-body">
-          <div className="sop-card-meta">
-            Saved {sop.created_at ? new Date(sop.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''}
+          <div className="sop-card-meta" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Saved {sop.created_at ? new Date(sop.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ''}</span>
+            {onDelete && (
+              <button 
+                onClick={onDelete}
+                className="btn btn-ghost" 
+                style={{ padding: '4px 8px', fontSize: '0.75rem', color: '#ef4444', height: 'auto', minHeight: 'auto' }}
+              >
+                Delete
+              </button>
+            )}
           </div>
-          <ol className="sop-steps-mini">
-            {sop.steps.map((step, i) => (
-              <li key={i}>{step}</li>
-            ))}
-          </ol>
-          {sop.why_not_you && (
-            <p className="sop-why-mini">{sop.why_not_you}</p>
+          {sop.type === 'edit' ? (
+            <div className="edited-text-block" style={{ marginTop: '16px', background: 'var(--bg-surface)', borderLeft: '3px solid var(--accent)', padding: '16px', borderRadius: '4px', fontSize: '14px', color: 'var(--brown)', lineHeight: '1.6' }}>
+              {(sop.edited_text || '').split('\n').map((line, i) => (
+                line.trim() === '' ? <br key={i} /> : <p key={i} style={{ margin: '0 0 8px 0' }}>{line}</p>
+              ))}
+            </div>
+          ) : (
+            <>
+              <ol className="sop-steps-mini">
+                {(sop.steps || []).map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
+              </ol>
+              {sop.why_not_you && (
+                <p className="sop-why-mini">{sop.why_not_you}</p>
+              )}
+            </>
           )}
         </div>
       )}

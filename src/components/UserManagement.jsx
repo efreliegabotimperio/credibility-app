@@ -127,7 +127,7 @@ export default function UserManagement({ onClose, currentUserRole, currentUserId
           <div style={{ overflowX: 'auto', marginTop: '16px' }}>
             <table className="responsive-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
               <thead>
-                <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
+                <tr style={{ borderBottom: '2px solid var(--linen-mid)', textAlign: 'left' }}>
                   <th style={{ padding: '12px 8px' }}>User</th>
                   <th style={{ padding: '12px 8px' }}>Email</th>
                   <th style={{ padding: '12px 8px' }}>Role</th>
@@ -136,19 +136,21 @@ export default function UserManagement({ onClose, currentUserRole, currentUserId
               </thead>
               <tbody>
                 {users.map(user => (
-                  <tr key={user.id} style={{ borderBottom: '1px solid #eee' }}>
+                  <tr key={user.id} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td data-label="Name" style={{ padding: '12px 8px', fontWeight: '500' }}>
                       {user.first_name ? `${user.first_name} ${user.last_name || ''}` : '-'}
                     </td>
-                    <td data-label="Email" style={{ padding: '12px 8px', color: '#6b7280' }}>
+                    <td data-label="Email" style={{ padding: '12px 8px', color: 'var(--taupe)' }}>
                       {user.email}
                     </td>
                     <td data-label="Current Role" style={{ padding: '12px 8px' }}>
                       <span style={{ 
                         display: 'inline-block', 
-                        padding: '2px 8px', 
+                        padding: '4px 10px', 
                         borderRadius: '12px', 
-                        background: '#f3f4f6', 
+                        background: 'var(--bg-surface)', 
+                        color: 'var(--taupe)',
+                        border: '1px solid var(--border)',
                         fontSize: '0.8rem',
                         fontWeight: '500'
                       }}>
@@ -172,7 +174,7 @@ export default function UserManagement({ onClose, currentUserRole, currentUserId
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan="3" style={{ textAlign: 'center', padding: '24px', color: '#6b7280' }}>
+                    <td colSpan="4" style={{ textAlign: 'center', padding: '24px', color: 'var(--taupe)' }}>
                       No users found.
                     </td>
                   </tr>
