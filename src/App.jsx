@@ -286,6 +286,8 @@ export default function App() {
           onResult={handleResult}
           selectedPrompt={selectedPrompt}
           onPromptUsed={() => setSelectedPrompt('')}
+          isLoggedIn={!!currentUser}
+          onRequireAuth={() => setShowAuth(true)}
         />
 
         {/* Result */}

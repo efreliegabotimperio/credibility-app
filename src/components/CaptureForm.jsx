@@ -52,7 +52,7 @@ function useVoice(onTranscript) {
   return { recording, supported, startRecording, stopRecording };
 }
 
-export default function CaptureForm({ onResult, selectedPrompt, onPromptUsed }) {
+export default function CaptureForm({ onResult, selectedPrompt, onPromptUsed, isLoggedIn, onRequireAuth }) {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -72,6 +72,11 @@ export default function CaptureForm({ onResult, selectedPrompt, onPromptUsed }) 
     e.preventDefault();
     if (!text.trim()) return;
     
+    if (!isLoggedIn) {
+      if (onRequireAuth) onRequireAuth();
+      return;
+    }
+
     setError('');
     setLoading(true);
     try {
@@ -118,6 +123,8 @@ export default function CaptureForm({ onResult, selectedPrompt, onPromptUsed }) 
                 <span className="spinner" />
                 Working on it…
               </>
+            ) : !isLoggedIn ? (
+              'Log in to Edit'
             ) : (
               'Edit this for me.'
             )}
