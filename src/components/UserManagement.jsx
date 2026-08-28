@@ -94,6 +94,36 @@ export default function UserManagement({ onClose, currentUserRole, currentUserId
     }
   }
 
+  async function handleDeleteUser(user) {
+    if (!isSuperadmin) return;
+    
+    const userName = user.first_name 
+      ? `${user.first_name} ${user.last_name || ''}`.trim() 
+      : (user.email || 'this user');
+
+    if (!window.confirm(`Are you sure you want to permanently delete ${userName} and all of their connected data (activities, SOPs, etc.)? This action cannot be undone.`)) {
+      return;
+    }
+
+    const { error } = await supabase.rpc('delete_admin_user', { target_user_id: user.id });
+
+    if (error) {
+      console.error("Error deleting user:", error);
+      alert("Failed to delete user: " + error.message);
+    } else {
+      // Log the deletion activity
+      await supabase.from('activity_logs').insert({
+        user_id: currentUserId,
+        action: 'Deleted User',
+        details: `Deleted user ${userName}`
+      });
+
+      setToast('User deleted successfully!');
+      setTimeout(() => setToast(''), 2500);
+      setUsers(users.filter(u => u.id !== user.id));
+    }
+  }
+
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal-box modal-box-fixed" role="dialog" aria-modal="true" style={{ maxWidth: '900px', width: '100%' }}>
@@ -190,6 +220,16 @@ export default function UserManagement({ onClose, currentUserRole, currentUserId
                           onClick={() => handleResendVerification(user.email)}
                         >
                           Resend Email
+                        </button>
+                      )}
+                      {isSuperadmin && (
+                        <button
+                          className="btn-danger"
+                          style={{ padding: '6px 12px', fontSize: '0.8rem', minHeight: '36px', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '8px', cursor: 'pointer' }}
+                          onClick={() => handleDeleteUser(user)}
+                          title="Delete User"
+                        >
+                          Delete
                         </button>
                       )}
                     </td>
