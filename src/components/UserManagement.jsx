@@ -17,43 +17,42 @@ export default function UserManagement({ onClose, currentUserRole, currentUserId
     setLoading(true);
     setError('');
     
-    // Fetch profiles
-    const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
+    // Fetch users using the admin RPC
+    const { data: usersData, error: rpcError } = await supabase.rpc('get_admin_users');
 
-    if (profilesError) {
-      console.error("Error fetching users:", profilesError);
-      setError("Failed to load users.");
+    if (rpcError) {
+      console.error("Error fetching admin users:", rpcError);
+      setError("Failed to load users. Please ensure you have run the setup-admin-rpc.sql script in your Supabase SQL editor.");
       setLoading(false);
       return;
     }
 
-    // Fetch user roles
-    const { data: roles, error: rolesError } = await supabase
-      .from('user_roles')
-      .select('*');
-
-    if (rolesError) {
-      console.error("Error fetching roles:", rolesError);
-    }
-
-    // Combine them and filter out the current user
-    const mapped = profiles
+    // Filter out the current user
+    const mapped = (usersData || [])
       .filter(u => u.id !== currentUserId)
-      .map(u => {
-        const userRole = roles?.find(r => r.user_id === u.id);
-        return {
-          ...u,
-          role: userRole?.role || 'owner' // default to owner if missing
-        };
-      })
       // Hide superadmins from the list if the current user is only an admin
       .filter(u => isSuperadmin || u.role !== 'superadmin');
 
     setUsers(mapped);
     setLoading(false);
+  }
+
+  async function handleResendVerification(email) {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+      options: {
+        emailRedirectTo: window.location.origin + import.meta.env.BASE_URL,
+      }
+    });
+
+    if (error) {
+      console.error("Error resending email:", error);
+      alert("Failed to resend email: " + error.message);
+    } else {
+      setToast('Verification email sent to ' + email);
+      setTimeout(() => setToast(''), 2500);
+    }
   }
 
   async function handleRoleChange(userId, currentRole, newRole) {
@@ -131,6 +130,7 @@ export default function UserManagement({ onClose, currentUserRole, currentUserId
                   <th style={{ padding: '12px 8px' }}>User</th>
                   <th style={{ padding: '12px 8px' }}>Email</th>
                   <th style={{ padding: '12px 8px' }}>Role</th>
+                  <th style={{ padding: '12px 8px' }}>Status</th>
                   <th style={{ padding: '12px 8px' }}>Actions</th>
                 </tr>
               </thead>
@@ -157,24 +157,47 @@ export default function UserManagement({ onClose, currentUserRole, currentUserId
                         {user.role}
                       </span>
                     </td>
-                    <td data-label="Action" style={{ padding: '12px 8px' }}>
+                    <td data-label="Status" style={{ padding: '12px 8px' }}>
+                      <span style={{ 
+                        display: 'inline-block', 
+                        padding: '4px 10px', 
+                        borderRadius: '12px', 
+                        background: user.is_verified ? '#f0fdf4' : '#fffbeb', 
+                        color: user.is_verified ? '#166534' : '#b45309',
+                        border: `1px solid ${user.is_verified ? '#bbf7d0' : '#fde68a'}`,
+                        fontSize: '0.8rem',
+                        fontWeight: '500'
+                      }}>
+                        {user.is_verified ? 'Verified' : 'Pending'}
+                      </span>
+                    </td>
+                    <td data-label="Action" style={{ padding: '12px 8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
                       <select 
                         value={user.role} 
                         onChange={(e) => handleRoleChange(user.id, user.role, e.target.value)}
                         className="form-input"
-                        style={{ padding: '6px 10px', height: 'auto', minHeight: '36px', fontSize: '0.85rem' }}
+                        style={{ padding: '6px 10px', height: 'auto', minHeight: '36px', fontSize: '0.85rem', width: 'auto' }}
                         disabled={!isSuperadmin && user.role === 'superadmin'}
                       >
                         <option value="owner">Owner</option>
                         <option value="admin">Admin</option>
                         {isSuperadmin && <option value="superadmin">Superadmin</option>}
                       </select>
+                      {!user.is_verified && (
+                        <button 
+                          className="btn-primary" 
+                          style={{ padding: '6px 12px', fontSize: '0.8rem', minHeight: '36px' }}
+                          onClick={() => handleResendVerification(user.email)}
+                        >
+                          Resend Email
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan="4" style={{ textAlign: 'center', padding: '24px', color: 'var(--taupe)' }}>
+                    <td colSpan="5" style={{ textAlign: 'center', padding: '24px', color: 'var(--taupe)' }}>
                       No users found.
                     </td>
                   </tr>
