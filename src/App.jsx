@@ -352,6 +352,8 @@ export default function App() {
       {showActivityLogs && (
         <ActivityLogs
           onClose={() => setShowActivityLogs(false)}
+          currentUserRole={userRole}
+          currentUserId={currentUser?.id}
         />
       )}
 

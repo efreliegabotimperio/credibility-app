@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 
-export default function ActivityLogs({ onClose }) {
+export default function ActivityLogs({ onClose, currentUserRole, currentUserId }) {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,15 +36,23 @@ export default function ActivityLogs({ onClose }) {
     }
 
     // 2. Fetch profiles so we can show names instead of just UUIDs
-    const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, email, first_name, last_name');
-
-    if (profilesError) {
-      console.error("Error fetching profiles:", profilesError);
+    // Admins need to see all users, so we try the admin RPC first.
+    let profiles = [];
+    const { data: adminProfiles, error: adminError } = await supabase.rpc('get_admin_users');
+    
+    if (!adminError && adminProfiles) {
+      profiles = adminProfiles;
+    } else {
+      // Fallback for regular users (who only see their own logs and their own profile)
+      const { data: userProfiles } = await supabase
+        .from('profiles')
+        .select('id, email, first_name, last_name');
+      if (userProfiles) {
+        profiles = userProfiles;
+      }
     }
 
-    // 3. Map the names to the logs
+    // 3. Map the names and roles to the logs
     const mappedLogs = activityData.map(log => {
       const userProfile = profiles?.find(p => p.id === log.user_id);
       const name = userProfile?.first_name 
@@ -53,11 +61,23 @@ export default function ActivityLogs({ onClose }) {
         
       return {
         ...log,
-        userName: name
+        userName: name,
+        userRole: userProfile?.role || 'owner'
       };
     });
 
-    setLogs(mappedLogs);
+    // 4. Filter logs based on viewer's role
+    let viewableLogs = mappedLogs;
+    if (currentUserRole === 'admin') {
+      // Admins cannot see superadmin activities
+      viewableLogs = mappedLogs.filter(log => log.userRole !== 'superadmin');
+    } else if (currentUserRole === 'owner' || !currentUserRole) {
+      // Owners can only see their own activities
+      viewableLogs = mappedLogs.filter(log => log.user_id === currentUserId);
+    }
+    // superadmins see everything
+
+    setLogs(viewableLogs);
     setLoading(false);
   }
 
