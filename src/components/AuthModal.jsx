@@ -53,6 +53,7 @@ export default function AuthModal({ onClose }) {
       email: email === 'super_admin' ? 'superadmin@example.com' : email,
       password,
       options: {
+        emailRedirectTo: window.location.origin + import.meta.env.BASE_URL,
         data: {
           first_name: firstName,
           last_name: lastName,
