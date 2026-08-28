@@ -28,6 +28,7 @@ export default function App() {
   // Auth state
   const [currentUser, setCurrentUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState('login');
   const [showProfile, setShowProfile] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
@@ -50,12 +51,17 @@ export default function App() {
       if (session?.user) checkRole(session.user.id);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setCurrentUser(session?.user ?? null);
       if (session?.user) {
         checkRole(session.user.id);
       } else {
         setUserRole('owner');
+      }
+      
+      if (event === 'PASSWORD_RECOVERY') {
+        setAuthMode('update-password');
+        setShowAuth(true);
       }
     });
 
@@ -233,7 +239,7 @@ export default function App() {
                 </button>
               </>
             ) : (
-              <button id="btn-open-auth" className="btn btn-secondary btn-sm" onClick={() => setShowAuth(true)}>
+              <button id="btn-open-auth" className="btn btn-secondary btn-sm" onClick={() => { setAuthMode('login'); setShowAuth(true); }}>
                 Log in / Register
               </button>
             )}
@@ -287,7 +293,7 @@ export default function App() {
           selectedPrompt={selectedPrompt}
           onPromptUsed={() => setSelectedPrompt('')}
           isLoggedIn={!!currentUser}
-          onRequireAuth={() => setShowAuth(true)}
+          onRequireAuth={() => { setAuthMode('login'); setShowAuth(true); }}
         />
 
         {/* Result */}
@@ -313,7 +319,8 @@ export default function App() {
       {/* ─── Auth Modal ──────────────────────────────────────────────────────── */}
       {showAuth && (
         <AuthModal
-          onClose={() => setShowAuth(false)}
+          initialMode={authMode}
+          onClose={() => { setShowAuth(false); setAuthMode('login'); }}
         />
       )}
 
